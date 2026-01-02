@@ -1,53 +1,50 @@
-plugins {
-    id 'fabric-loom' version '1.6.12'
-    id 'maven-publish'
-}
+name: Build Enzo Mod Kit
 
-group = 'com.enzo.enzomodkit'   // from your package
-version = '1.0.0'               // you can change if needed
-archivesBaseName = 'enzomodkit' // matches rootProject.name and mod id
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
-repositories {
-    mavenCentral()
-    maven { url = 'https://maven.fabricmc.net/' }
-}
+jobs:
+  build:
+    name: Build Mod
+    runs-on: ubuntu-latest
 
-dependencies {
-    // Minecraft + mappings + loader
-    minecraft 'com.mojang:minecraft:1.21.4'
-    mappings 'net.fabricmc:yarn:1.21.4+build.1:v2'
-    modImplementation 'net.fabricmc:fabric-loader:0.18.4'
+    steps:
+      # Checkout the repo
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    // Fabric API
-    modImplementation 'net.fabricmc.fabric-api:fabric-api:0.88.0+1.21.4'
-}
+      # Set up Java 17
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
 
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(17) // recommended for Minecraft 1.21.4
-    }
-}
+      # Cache Gradle dependencies
+      - name: Cache Gradle packages
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-
 
-loom {
-    mappings("yarn", "1.21.4+build.1")
-    accessWidenerPath = file("src/main/resources/enzomodkit.accesswidener") // optional
-}
+      # Verify Gradle version
+      - name: Check Gradle version
+        run: ./gradlew --version
 
-tasks.withType(JavaCompile) {
-    options.encoding = 'UTF-8'
-}
+      # Build the mod
+      - name: Build
+        run: ./gradlew build --refresh-dependencies
 
-tasks.withType(ProcessResources) {
-    inputs.property "version", project.version
-    filesMatching("fabric.mod.json") {
-        expand "version": project.version
-    }
-}
-
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            from components.java
-        }
-    }
-}
+      # Upload the built JAR as artifact
+      - name: Upload Mod JAR
+        uses: actions/upload-artifact@v3
+        with:
+          name: EnzoModKit
+          path: build/libs/*.jar
