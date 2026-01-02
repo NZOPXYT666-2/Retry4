@@ -2,6 +2,7 @@ plugins {
     id 'fabric-loom' version "${loom_version}"
     id 'maven-publish'
 }
+
 group = project.maven_group
 version = project.mod_version
 
@@ -10,8 +11,7 @@ base {
 }
 
 repositories {
-    maven { url "https://maven.fabricmc.net/" }
-    mavenCentral()
+    maven { url 'https://maven.fabricmc.net/' }
 }
 
 dependencies {
