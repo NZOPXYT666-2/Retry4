@@ -1,34 +1,53 @@
 plugins {
-    id "fabric-loom" version "${loom_version}"
-    id "maven-publish"
+    id 'fabric-loom' version '1.6.12'
+    id 'maven-publish'
 }
 
-group = project.maven_group
-version = project.mod_version
-
-base {
-    archivesName = project.archives_base_name
-}
+group = 'com.enzo.enzomodkit'   // from your package
+version = '1.0.0'               // you can change if needed
+archivesBaseName = 'enzomodkit' // matches rootProject.name and mod id
 
 repositories {
-    maven { url "https://maven.fabricmc.net/" }
     mavenCentral()
+    maven { url = 'https://maven.fabricmc.net/' }
 }
 
 dependencies {
-    minecraft "com.mojang:minecraft:${minecraft_version}"
-    mappings loom.yarnMappings("${minecraft_version}+build.1")
-    modImplementation "net.fabricmc:fabric-loader:${loader_version}"
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
+    // Minecraft + mappings + loader
+    minecraft 'com.mojang:minecraft:1.21.4'
+    mappings 'net.fabricmc:yarn:1.21.4+build.1:v2'
+    modImplementation 'net.fabricmc:fabric-loader:0.18.4'
+
+    // Fabric API
+    modImplementation 'net.fabricmc.fabric-api:fabric-api:0.88.0+1.21.4'
 }
 
 java {
-    toolchain.languageVersion = JavaLanguageVersion.of(21)
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17) // recommended for Minecraft 1.21.4
+    }
 }
 
-tasks.withType(JavaCompile).configureEach {
-    it.options.release = 21
-}
 loom {
     mappings("yarn", "1.21.4+build.1")
+    accessWidenerPath = file("src/main/resources/enzomodkit.accesswidener") // optional
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+tasks.withType(ProcessResources) {
+    inputs.property "version", project.version
+    filesMatching("fabric.mod.json") {
+        expand "version": project.version
+    }
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
 }
