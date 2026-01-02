@@ -29,3 +29,6 @@ java {
 tasks.withType(JavaCompile).configureEach {
     it.options.release = 21
 }
+loom {
+    mappings("yarn", "1.21.4+build.1")
+}
